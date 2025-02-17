@@ -1,10 +1,12 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.AccessDeniedException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemPatchDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -15,14 +17,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     @Transactional
@@ -36,7 +34,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
+    public ItemDto updateItem(Long userId, Long itemId, ItemPatchDto itemPatchDto) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
@@ -44,14 +42,14 @@ public class ItemServiceImpl implements ItemService {
             throw new AccessDeniedException("Редактировать может только владелец вещи");
         }
 
-        if (itemDto.getName() != null) {
-            item.setName(itemDto.getName());
+        if (itemPatchDto.getName() != null) {
+            item.setName(itemPatchDto.getName());
         }
-        if (itemDto.getDescription() != null) {
-            item.setDescription(itemDto.getDescription());
+        if (itemPatchDto.getDescription() != null) {
+            item.setDescription(itemPatchDto.getDescription());
         }
-        if (itemDto.getAvailable() != null) {
-            item.setAvailable(itemDto.getAvailable());
+        if (itemPatchDto.getAvailable() != null) {
+            item.setAvailable(itemPatchDto.getAvailable());
         }
 
         return ItemMapper.toItemDto(itemRepository.save(item));
@@ -84,3 +82,5 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 }
+
+

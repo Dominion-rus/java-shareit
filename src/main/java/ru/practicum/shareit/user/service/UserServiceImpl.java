@@ -1,59 +1,67 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.NotFoundException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserPatchDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    @Override
+    @Transactional
+    public UserDto createUser(UserDto userDto) {
+        User user = UserMapper.toUser(userDto);
+        return UserMapper.toUserDto(userRepository.save(user));
+    }
 
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    @Override
+    @Transactional(readOnly = true)
+    public UserDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        return UserMapper.toUserDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
 
     @Override
     @Transactional
-    public User updateUser(Long id, User user) {
-        User existingUser = getUserById(id);
+    public UserDto updateUser(Long id, UserPatchDto userPatchDto) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        if (user.getName() != null) {
-            existingUser.setName(user.getName());
+        if (userPatchDto.getName() != null) {
+            existingUser.setName(userPatchDto.getName());
         }
-        if (user.getEmail() != null) {
-            existingUser.setEmail(user.getEmail());
+        if (userPatchDto.getEmail() != null) {
+            existingUser.setEmail(userPatchDto.getEmail());
         }
 
-        return userRepository.save(existingUser);
+        User updatedUser = userRepository.save(existingUser);
+        return UserMapper.toUserDto(updatedUser);
     }
 }
+

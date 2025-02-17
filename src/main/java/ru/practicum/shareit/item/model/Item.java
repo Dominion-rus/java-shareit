@@ -1,8 +1,6 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,17 +24,12 @@ public class Item {
     private Long id;
 
     @Column(nullable = false)
-    @NotBlank(message = "Имя или логин не может быть пустым")
-    @NotNull(message = "Поле 'name' не может быть пустым")
     private String name;
 
     @Column(nullable = false)
-    @NotBlank(message = "Описание не может быть пустым")
-    @NotNull(message = "Поле 'description' не может быть пустым")
     private String description;
 
     @Column(nullable = false)
-    @NotNull(message = "Поле 'available' не может быть пустым")
     private Boolean available;
 
     @ManyToOne

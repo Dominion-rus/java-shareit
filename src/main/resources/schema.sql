@@ -1,14 +1,20 @@
--- Удаляем таблицы, если они существуют (для чистоты)
-DROP TABLE IF EXISTS bookings, items, users, requests;
+-- Удаляем таблицы, если они существуют (обратный порядок, чтобы не было ошибок)
+DROP TABLE IF EXISTS bookings, items, requests, users;
 
--- Таблица пользователей
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL
 );
 
--- Таблица вещей
+CREATE TABLE requests (
+    id SERIAL PRIMARY KEY,
+    description TEXT NOT NULL,
+    requestor_id INT NOT NULL,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (requestor_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -20,16 +26,7 @@ CREATE TABLE items (
     FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL
 );
 
--- Таблица запросов на вещи
-CREATE TABLE requests (
-    id SERIAL PRIMARY KEY,
-    description TEXT NOT NULL,
-    requestor_id INT NOT NULL,
-    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (requestor_id) REFERENCES users(id) ON DELETE CASCADE
-);
 
--- Таблица бронирований
 CREATE TABLE bookings (
     id SERIAL PRIMARY KEY,
     start_time TIMESTAMP NOT NULL,
