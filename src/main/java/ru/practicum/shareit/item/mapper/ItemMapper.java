@@ -8,7 +8,8 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 
 public class ItemMapper {
-    public static ItemDto toItemDto(Item item, List<BookingResponseDto> lastBooking, List<BookingResponseDto> nextBooking, List<CommentDto> comments) {
+    public static ItemDto toItemDto(Item item, List<BookingResponseDto> lastBooking,
+                                    List<BookingResponseDto> nextBooking, List<CommentDto> comments) {
 
         return new ItemDto(
                 item.getId(),
