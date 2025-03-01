@@ -37,3 +37,14 @@ CREATE TABLE bookings (
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
     FOREIGN KEY (booker_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    text TEXT NOT NULL,
+    item_id INT NOT NULL,
+    author_id INT NOT NULL,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
