@@ -1,12 +1,14 @@
 -- Удаляем таблицы, если они существуют (обратный порядок, чтобы не было ошибок)
-DROP TABLE IF EXISTS bookings, items, requests, users;
+DROP TABLE IF EXISTS bookings, comments, items, requests, users;
 
+-- Сначала создаем таблицу пользователей
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL
 );
 
+-- Создаем таблицу запросов, ссылающуюся на users
 CREATE TABLE requests (
     id SERIAL PRIMARY KEY,
     description TEXT NOT NULL,
@@ -15,6 +17,7 @@ CREATE TABLE requests (
     FOREIGN KEY (requestor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Создаем таблицу предметов, ссылающуюся на users и requests
 CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -26,7 +29,7 @@ CREATE TABLE items (
     FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL
 );
 
-
+-- Создаем таблицу бронирований, ссылающуюся на items и users
 CREATE TABLE bookings (
     id SERIAL PRIMARY KEY,
     start_time TIMESTAMP NOT NULL,
@@ -38,7 +41,7 @@ CREATE TABLE bookings (
     FOREIGN KEY (booker_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
+-- Создаем таблицу комментариев, ссылающуюся на items и users
 CREATE TABLE comments (
     id SERIAL PRIMARY KEY,
     text TEXT NOT NULL,
