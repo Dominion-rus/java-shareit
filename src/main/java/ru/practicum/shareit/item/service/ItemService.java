@@ -16,5 +16,5 @@ public interface ItemService {
 
     List<ItemDto> searchItems(String text);
 
-    ItemDto getItemWithCommentsAndBookings(Long itemId);
+    ItemDto getItemWithCommentsAndBookings(Long itemId, Long userId);
 }

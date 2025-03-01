@@ -40,9 +40,17 @@ public class ItemController {
         return itemService.updateItem(userId, itemId, itemPatchDto);
     }
 
+//    @GetMapping("/{itemId}")
+//    public ItemDto getItemById(@PathVariable Long itemId) {
+//        return itemService.getItemWithCommentsAndBookings(itemId);
+//    }
+
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
-        return itemService.getItemWithCommentsAndBookings(itemId);
+    public ItemDto getItem(
+            @PathVariable Long itemId,
+            @RequestHeader("X-Sharer-User-Id") Long userId // Теперь получаем userId из заголовка
+    ) {
+        return itemService.getItemWithCommentsAndBookings(itemId, userId);
     }
 
 

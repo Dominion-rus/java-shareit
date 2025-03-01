@@ -136,39 +136,40 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public ItemDto getItemWithCommentsAndBookings(Long itemId) {
+    public ItemDto getItemWithCommentsAndBookings(Long itemId, Long userId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        // Извлечение всех бронирований для вещи
         List<Booking> bookings = bookingRepository.findByItemIdOrderByStartDesc(itemId);
-
         LocalDateTime now = LocalDateTime.now();
 
-        // Отфильтровать только прошедшие бронирования
+        boolean isOwner = item.getOwner().getId().equals(userId);
+
         List<Booking> pastBookings = bookings.stream()
-                .filter(b -> b.getEnd().isBefore(LocalDateTime.now()) && b.getStatus() == BookingStatus.APPROVED)
+                .filter(b -> b.getEnd().isBefore(now) && b.getStatus() == BookingStatus.APPROVED)
                 .collect(Collectors.toList());
 
-
-        // Получение информации о последнем и следующем бронировании
-        List<BookingResponseDto> lastBooking = pastBookings.isEmpty() ? Collections.emptyList() :
-                Collections.singletonList(BookingMapper.toBookingDto(pastBookings.get(0)));
+        // lastBooking видно только владельцу!
+        List<BookingResponseDto> lastBooking = (isOwner && !pastBookings.isEmpty()) ?
+                Collections.singletonList(BookingMapper.toBookingDto(pastBookings.get(0))) :
+                Collections.emptyList();
 
         List<BookingResponseDto> nextBooking = bookings.stream()
-                .filter(b -> b.getStart().isAfter(now)) // Следующее бронирование в будущем
+                .filter(b -> b.getStart().isAfter(now))
                 .map(BookingMapper::toBookingDto)
                 .findFirst()
                 .map(Collections::singletonList)
                 .orElse(Collections.emptyList());
 
-        // Извлечение комментариев
         List<CommentDto> comments = commentRepository.findByItemId(itemId).stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
 
-        return ItemMapper.toItemDto(item, lastBooking, nextBooking, comments); // Обновленный маппер
+        return ItemMapper.toItemDto(item, lastBooking, nextBooking, comments);
     }
+
+
+
 
 
 }
