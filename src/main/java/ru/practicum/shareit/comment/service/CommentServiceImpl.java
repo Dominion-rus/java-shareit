@@ -34,7 +34,7 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         // Проверяем, что пользователь арендовал эту вещь и бронирование было подтверждено
-        Booking booking = bookingRepository.findFirstByItemIdAndBookerIdAndStatusAndEndBeforeOrderByStartDesc(
+        Booking booking = bookingRepository.findLastCompletedBooking(
                 itemId, userId, BookingStatus.APPROVED, LocalDateTime.now());
 
         if (booking == null) {

@@ -41,6 +41,10 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidateException("Вещь недоступна для бронирования");
         }
 
+        if (bookingDto.getStart().isAfter(bookingDto.getEnd()) || bookingDto.getStart().isEqual(bookingDto.getEnd())) {
+            throw new ValidateException("Дата начала бронирования должна быть раньше даты окончания");
+        }
+
         Booking booking = new Booking(null, bookingDto.getStart(), bookingDto.getEnd(), item, booker,
                 BookingStatus.WAITING);
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
@@ -111,8 +115,6 @@ public class BookingServiceImpl implements BookingService {
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
     }
-
-
 
     @Override
     @Transactional(readOnly = true)
