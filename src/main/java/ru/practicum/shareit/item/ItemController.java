@@ -40,11 +40,6 @@ public class ItemController {
         return itemService.updateItem(userId, itemId, itemPatchDto);
     }
 
-//    @GetMapping("/{itemId}")
-//    public ItemDto getItemById(@PathVariable Long itemId) {
-//        return itemService.getItemWithCommentsAndBookings(itemId);
-//    }
-
     @GetMapping("/{itemId}")
     public ItemDto getItem(
             @PathVariable Long itemId,
