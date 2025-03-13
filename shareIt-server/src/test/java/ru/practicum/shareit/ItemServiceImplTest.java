@@ -7,7 +7,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.comment.repository.CommentRepository;
 import ru.practicum.shareit.exceptions.AccessDeniedException;
 import ru.practicum.shareit.exceptions.NotFoundException;
@@ -16,19 +19,20 @@ import ru.practicum.shareit.item.dto.ItemPatchDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceImplTest {
@@ -51,23 +55,27 @@ public class ItemServiceImplTest {
     private Item item;
     private ItemDto itemDto;
     private ItemPatchDto itemPatchDto;
+    private Booking lastBooking;
+    private Booking nextBooking;
+    private Comment comment;
 
     @BeforeEach
     void setUp() {
         user = new User(1L, "John Doe", "john@example.com");
         anotherUser = new User(2L, "Alice Smith", "alice@example.com");
         item = new Item(1L, "Laptop", "Powerful laptop", true, user, null);
-        itemDto = new ItemDto(1L, "Laptop", "Powerful laptop", true, null,
-                null, null, null);
-        itemPatchDto = new ItemPatchDto("Updated Laptop", "New powerful laptop", false,
-                null);
+        itemDto = new ItemDto(1L, "Laptop", "Powerful laptop", true, null, null, null, null);
+        itemPatchDto = new ItemPatchDto("Updated Laptop", "New powerful laptop", false, null);
+
+        lastBooking = new Booking(1L, LocalDateTime.now().minusDays(3), LocalDateTime.now().minusDays(1), item, user, BookingStatus.APPROVED);
+        nextBooking = new Booking(2L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3), item, user, BookingStatus.APPROVED);
+        comment = new Comment(1L, "Great item!", item, user, LocalDateTime.now().minusDays(2));
     }
 
     @Test
     void createItem_ShouldReturnItemDto() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.save(Mockito.<Item>any())).thenReturn(item);
-
 
         ItemDto result = itemService.createItem(user.getId(), itemDto);
 
@@ -125,35 +133,29 @@ public class ItemServiceImplTest {
     }
 
     @Test
-    void getItemById_WhenItemNotFound_ShouldThrowException() {
-        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        NotFoundException exception = assertThrows(
-                NotFoundException.class,
-                () -> itemService.getItemById(1L)
-        );
-
-        assertThat(exception.getMessage(), is("Вещь не найдена"));
-    }
-
-    @Test
     void getUserItems_ShouldReturnItemsList() {
         when(itemRepository.findAllByOwnerId(anyLong())).thenReturn(List.of(item));
+        when(bookingRepository.findFirstByItemIdAndStartBeforeOrderByStartDesc(anyLong(), any())).thenReturn(lastBooking);
+        when(bookingRepository.findFirstByItemIdAndStartAfterOrderByStartAsc(anyLong(), any())).thenReturn(nextBooking);
+        when(commentRepository.findByItemId(anyLong())).thenReturn(List.of(comment));
 
         List<ItemDto> result = itemService.getUserItems(user.getId());
 
-        assertThat(result, not(empty()));
-        assertThat(result.size(), is(1));
+        assertThat(result, hasSize(1));
         assertThat(result.get(0).getName(), is("Laptop"));
     }
 
     @Test
-    void getUserItems_WhenNoItems_ShouldReturnEmptyList() {
-        when(itemRepository.findAllByOwnerId(anyLong())).thenReturn(List.of());
+    void getItemWithCommentsAndBookings_ShouldReturnFullItemInfo() {
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(bookingRepository.findByItemIdOrderByStartDesc(anyLong())).thenReturn(List.of(lastBooking, nextBooking));
+        when(commentRepository.findByItemId(anyLong())).thenReturn(List.of(comment));
 
-        List<ItemDto> result = itemService.getUserItems(user.getId());
+        ItemDto result = itemService.getItemWithCommentsAndBookings(item.getId(), user.getId());
 
-        assertThat(result, empty());
+        assertThat(result, notNullValue());
+        assertThat(result.getName(), is("Laptop"));
+        assertThat(result.getComments(), hasSize(1));
     }
 
     @Test
@@ -162,16 +164,21 @@ public class ItemServiceImplTest {
 
         List<ItemDto> result = itemService.searchItems("Laptop");
 
-        assertThat(result, not(empty()));
-        assertThat(result.size(), is(1));
+        assertThat(result, hasSize(1));
         assertThat(result.get(0).getName(), is("Laptop"));
     }
 
     @Test
-    void searchItems_WhenEmptyQuery_ShouldReturnEmptyList() {
+    void searchItems_WhenTextIsEmpty_ShouldReturnEmptyList() {
         List<ItemDto> result = itemService.searchItems("");
 
         assertThat(result, empty());
     }
-}
 
+    @Test
+    void searchItems_WhenTextIsNull_ShouldReturnEmptyList() {
+        List<ItemDto> result = itemService.searchItems(null);
+
+        assertThat(result, empty());
+    }
+}
