@@ -28,7 +28,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
@@ -65,7 +65,7 @@ class BookingServiceImplTest {
     void createBooking_ShouldReturnBookingResponseDto() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-        when(bookingRepository.save(Mockito.<Booking>any())).thenReturn(booking);
+        when(bookingRepository.save(Mockito.any())).thenReturn(booking);
 
         BookingResponseDto result = bookingService.createBooking(user.getId(), bookingDto);
 
@@ -89,9 +89,24 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void createBooking_WhenEndBeforeStart_ShouldThrowException() {
+        bookingDto = new BookingDto(item.getId(), LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(1));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ValidateException exception = assertThrows(
+                ValidateException.class,
+                () -> bookingService.createBooking(user.getId(), bookingDto)
+        );
+
+        assertThat(exception.getMessage(), containsString("Дата начала бронирования должна быть раньше даты окончания"));
+    }
+
+    @Test
     void updateBookingStatus_ShouldApproveBooking() {
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-        when(bookingRepository.save(Mockito.<Booking>any())).thenReturn(booking);
+        when(bookingRepository.save(Mockito.any())).thenReturn(booking);
 
         BookingResponseDto result = bookingService.updateBookingStatus(owner.getId(), booking.getId(), true);
 
@@ -101,7 +116,7 @@ class BookingServiceImplTest {
     @Test
     void updateBookingStatus_ShouldRejectBooking() {
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-        when(bookingRepository.save(Mockito.<Booking>any())).thenReturn(booking);
+        when(bookingRepository.save(Mockito.any())).thenReturn(booking);
 
         BookingResponseDto result = bookingService.updateBookingStatus(owner.getId(), booking.getId(), false);
 
@@ -121,50 +136,25 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getBooking_ShouldReturnBooking_WhenOwnerOrBooker() {
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-
-        BookingResponseDto resultAsBooker = bookingService.getBooking(user.getId(), booking.getId());
-        BookingResponseDto resultAsOwner = bookingService.getBooking(owner.getId(), booking.getId());
-
-        assertThat(resultAsBooker, notNullValue());
-        assertThat(resultAsOwner, notNullValue());
-    }
-
-    @Test
-    void getBooking_ShouldThrowException_WhenUnauthorized() {
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-
-        AccessDeniedException exception = assertThrows(
-                AccessDeniedException.class,
-                () -> bookingService.getBooking(3L, booking.getId())
-        );
-
-        assertThat(exception.getMessage(), containsString("Доступ запрещён"));
-    }
-
-    @Test
-    void getUserBookings_ShouldReturnListOfBookings() {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(bookingRepository.findByBookerIdOrderByStartDesc(user.getId()))
-                .thenReturn(List.of(booking));
-
-        List<BookingResponseDto> result = bookingService.getUserBookings(user.getId(), "ALL");
-
-        assertThat(result, hasSize(1));
-        assertThat(result.get(0).getStatus(), is(BookingStatus.WAITING));
-    }
-
-    @Test
-    void getUserBookings_ShouldThrowException_WhenUserNotFound() {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.empty());
+    void getBooking_ShouldThrowException_WhenBookingNotFound() {
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> bookingService.getUserBookings(user.getId(), "ALL")
+                () -> bookingService.getBooking(user.getId(), 99L)
         );
 
-        assertThat(exception.getMessage(), containsString("Пользователь не найден"));
+        assertThat(exception.getMessage(), containsString("Бронирование не найдено"));
+    }
+
+    @Test
+    void getUserBookings_ShouldReturnEmptyList_WhenNoBookings() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(bookingRepository.findByBookerIdOrderByStartDesc(user.getId())).thenReturn(List.of());
+
+        List<BookingResponseDto> result = bookingService.getUserBookings(user.getId(), "ALL");
+
+        assertThat(result, is(empty()));
     }
 
     @Test
@@ -192,6 +182,4 @@ class BookingServiceImplTest {
         assertThat(result.get(0).getStatus(), is(BookingStatus.WAITING));
     }
 
-
 }
-

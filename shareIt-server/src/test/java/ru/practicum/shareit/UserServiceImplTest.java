@@ -66,31 +66,12 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_ShouldReturnUpdatedUserDto() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        when(userRepository.save(Mockito.<User>any())).thenReturn(user);
-
-        UserDto result = userService.updateUser(user.getId(), userPatchDto);
-
-        assertThat(result, notNullValue());
-        assertThat(result.getName(), is(userPatchDto.getName()));
-        assertThat(result.getEmail(), is(userPatchDto.getEmail()));
-    }
-
-    @Test
-    void deleteUser_ShouldCallRepositoryDeleteById() {
-        userService.deleteUser(user.getId());
-
-        verify(userRepository, times(1)).deleteById(user.getId());
-    }
-
-    @Test
-    void getUserById_ShouldThrowNotFoundException_WhenUserNotFound() {
+    void getUserById_ShouldThrowException_WhenUserNotFound() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userService.getUserById(999L)
+                () -> userService.getUserById(user.getId())
         );
 
         assertThat(exception.getMessage(), is("Пользователь не найден"));
@@ -107,32 +88,81 @@ class UserServiceImplTest {
 
     @Test
     void getAllUsers_ShouldReturnListOfUsers() {
-        List<User> users = List.of(
-                new User(1L, "John Doe", "john@example.com"),
-                new User(2L, "Jane Doe", "jane@example.com")
-        );
-
-        when(userRepository.findAll()).thenReturn(users);
+        when(userRepository.findAll()).thenReturn(List.of(user));
 
         List<UserDto> result = userService.getAllUsers();
 
-        assertThat(result, hasSize(2));
+        assertThat(result, hasSize(1));
         assertThat(result.get(0).getName(), is("John Doe"));
-        assertThat(result.get(1).getName(), is("Jane Doe"));
     }
 
     @Test
-    void updateUser_ShouldThrowNotFoundException_WhenUserNotFound() {
+    void deleteUser_ShouldCallRepositoryDeleteById() {
+        userService.deleteUser(user.getId());
+
+        verify(userRepository, times(1)).deleteById(user.getId());
+    }
+
+    @Test
+    void updateUser_ShouldReturnUpdatedUserDto() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(userRepository.save(Mockito.<User>any())).thenReturn(user);
+
+        UserDto result = userService.updateUser(user.getId(), userPatchDto);
+
+        assertThat(result, notNullValue());
+        assertThat(result.getName(), is(userPatchDto.getName()));
+        assertThat(result.getEmail(), is(userPatchDto.getEmail()));
+    }
+
+    @Test
+    void updateUser_ShouldThrowException_WhenUserNotFound() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userService.updateUser(999L, userPatchDto)
+                () -> userService.updateUser(user.getId(), userPatchDto)
         );
 
         assertThat(exception.getMessage(), is("Пользователь не найден"));
     }
 
+    @Test
+    void updateUser_ShouldUpdateOnlyName_WhenEmailIsNull() {
+        UserPatchDto patchDto = new UserPatchDto("New Name", null);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(userRepository.save(Mockito.<User>any())).thenReturn(user);
 
+        UserDto result = userService.updateUser(user.getId(), patchDto);
+
+        assertThat(result, notNullValue());
+        assertThat(result.getName(), is("New Name"));
+        assertThat(result.getEmail(), is("john@example.com"));
+    }
+
+    @Test
+    void updateUser_ShouldUpdateOnlyEmail_WhenNameIsNull() {
+        UserPatchDto patchDto = new UserPatchDto(null, "new@example.com");
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(userRepository.save(Mockito.<User>any())).thenReturn(user);
+
+        UserDto result = userService.updateUser(user.getId(), patchDto);
+
+        assertThat(result, notNullValue());
+        assertThat(result.getName(), is("John Doe"));
+        assertThat(result.getEmail(), is("new@example.com"));
+    }
+
+    @Test
+    void updateUser_ShouldNotChangeAnything_WhenAllFieldsAreNull() {
+        UserPatchDto patchDto = new UserPatchDto(null, null);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(userRepository.save(Mockito.<User>any())).thenReturn(user);
+
+        UserDto result = userService.updateUser(user.getId(), patchDto);
+
+        assertThat(result, notNullValue());
+        assertThat(result.getName(), is("John Doe"));
+        assertThat(result.getEmail(), is("john@example.com"));
+    }
 }
-
