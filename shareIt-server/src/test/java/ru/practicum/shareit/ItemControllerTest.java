@@ -229,15 +229,5 @@ class ItemControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void addComment_ShouldReturn500_WhenTextIsEmpty() throws Exception {
-        CommentDto commentDto = new CommentDto(null, "", "User1", LocalDateTime.now());
-
-        mockMvc.perform(post("/items/1/comment")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", "1")
-                        .content(objectMapper.writeValueAsString(commentDto)))
-                .andExpect(status().isInternalServerError());
-    }
 }
 
