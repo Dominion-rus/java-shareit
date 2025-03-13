@@ -19,6 +19,7 @@ import ru.practicum.shareit.exceptions.AccessDeniedException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -135,5 +136,77 @@ class BookingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()", is(1)));
     }
+
+
+    @Test
+    void updateBookingStatus_ShouldReturn404_WhenBookingNotFound() throws Exception {
+        when(bookingService.updateBookingStatus(anyLong(), anyLong(), anyBoolean()))
+                .thenThrow(new NotFoundException("Бронирование не найдено"));
+
+        mockMvc.perform(patch("/bookings/999?approved=true") // Несуществующий bookingId
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getUserBookings_ShouldReturnEmptyList_WhenNoBookings() throws Exception {
+        when(bookingService.getUserBookings(anyLong(), anyString())).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/bookings?state=ALL")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(0)));
+    }
+
+    @Test
+    void getOwnerBookings_ShouldReturnFilteredList_WhenStateIsSpecified() throws Exception {
+        List<BookingResponseDto> bookings = List.of(
+                new BookingResponseDto(1L, LocalDateTime.now().plusDays(1),
+                        LocalDateTime.now().plusDays(2), null, null, BookingStatus.REJECTED)
+        );
+
+        when(bookingService.getOwnerBookings(anyLong(), eq("REJECTED"))).thenReturn(bookings);
+
+        mockMvc.perform(get("/bookings/owner?state=REJECTED")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(1)))
+                .andExpect(jsonPath("$[0].status", is("REJECTED")));
+    }
+
+    @Test
+    void getBooking_ShouldReturn500_WhenHeaderIsMissing() throws Exception {
+        mockMvc.perform(get("/bookings/1"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void updateBookingStatus_ShouldReturn500_WhenApprovedParamIsMissing() throws Exception {
+        mockMvc.perform(patch("/bookings/1")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void getUserBookings_ShouldReturnAll_WhenStateNotProvided() throws Exception {
+        List<BookingResponseDto> bookings = List.of(
+                new BookingResponseDto(1L, LocalDateTime.now().plusDays(1),
+                        LocalDateTime.now().plusDays(2), null, null, BookingStatus.WAITING)
+        );
+
+        when(bookingService.getUserBookings(anyLong(), eq("ALL"))).thenReturn(bookings);
+
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(1)))
+                .andExpect(jsonPath("$[0].status", is("WAITING")));
+    }
+
+
+
+
+
+
 
 }

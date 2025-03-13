@@ -118,5 +118,42 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void getUser_ShouldReturn500_WhenUserIdIsNotProvided() throws Exception {
+        mockMvc.perform(get("/users/"))
+                .andExpect(status().isInternalServerError());
+    }
+
+
+    @Test
+    void updateUser_ShouldReturn404_WhenUserNotFound() throws Exception {
+        UserPatchDto updateDto = new UserPatchDto("Updated John", "updated@example.com");
+
+        when(userService.updateUser(eq(999L), any(UserPatchDto.class)))
+                .thenThrow(new NotFoundException("User not found"));
+
+        mockMvc.perform(patch("/users/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAllUsers_ShouldReturnEmptyList_WhenNoUsersExist() throws Exception {
+        when(userService.getAllUsers()).thenReturn(List.of());
+
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(0)));
+    }
+
+    @Test
+    void deleteUser_ShouldReturn500_WhenNoIdProvided() throws Exception {
+        mockMvc.perform(delete("/users/"))
+                .andExpect(status().isInternalServerError());
+    }
+
+
+
 }
 

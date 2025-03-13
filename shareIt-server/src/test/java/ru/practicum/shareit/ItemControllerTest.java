@@ -176,5 +176,68 @@ class ItemControllerTest {
                                 "User1", LocalDateTime.now()))))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void createItem_ShouldReturn500_WhenUserIdHeaderMissing() throws Exception {
+        ItemDto itemDto = new ItemDto(null, "Laptop", "Powerful laptop",
+                true, null, null, null, null);
+
+        mockMvc.perform(post("/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(itemDto)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void updateItem_ShouldReturn404_WhenItemNotFound() throws Exception {
+        when(itemService.updateItem(anyLong(), anyLong(), any(ItemPatchDto.class)))
+                .thenThrow(new NotFoundException("Item not found"));
+
+        mockMvc.perform(patch("/items/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", "1")
+                        .content(objectMapper.writeValueAsString(new ItemPatchDto("Updated Name",
+                                null, false, null))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getUserItems_ShouldReturn500_WhenUserIdHeaderMissing() throws Exception {
+        mockMvc.perform(get("/items"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void searchItems_ShouldReturnEmptyList_WhenTextIsEmpty() throws Exception {
+        when(itemService.searchItems(anyString())).thenReturn(List.of());
+
+        mockMvc.perform(get("/items/search?text="))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(0)));
+    }
+
+    @Test
+    void addComment_ShouldReturn404_WhenItemNotFound() throws Exception {
+        when(commentService.addComment(anyLong(), anyLong(), any(CommentDto.class)))
+                .thenThrow(new NotFoundException("Item not found"));
+
+        mockMvc.perform(post("/items/999/comment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", "1")
+                        .content(objectMapper.writeValueAsString(new CommentDto(null, "Nice!",
+                                "User1", LocalDateTime.now()))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addComment_ShouldReturn500_WhenTextIsEmpty() throws Exception {
+        CommentDto commentDto = new CommentDto(null, "", "User1", LocalDateTime.now());
+
+        mockMvc.perform(post("/items/1/comment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", "1")
+                        .content(objectMapper.writeValueAsString(commentDto)))
+                .andExpect(status().isInternalServerError());
+    }
 }
 

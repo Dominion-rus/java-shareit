@@ -107,5 +107,51 @@ class ItemRequestControllerTest {
                         .header("X-Sharer-User-Id", "1"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void createItemRequest_ShouldReturn500_WhenUserIdHeaderMissing() throws Exception {
+        ItemRequestDto requestDto = new ItemRequestDto(null, "Need a laptop", LocalDateTime.now());
+
+        mockMvc.perform(post("/requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void getAllRequests_ShouldUseDefaultPagination_WhenNoParamsProvided() throws Exception {
+        List<ItemRequestResponseDto> requests = List.of(
+                new ItemRequestResponseDto(1L, "Need a laptop", LocalDateTime.now(), List.of())
+        );
+
+        when(itemRequestService.getAllItemRequests(anyLong(), any(Pageable.class))).thenReturn(requests);
+
+        mockMvc.perform(get("/requests/all")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(1)))
+                .andExpect(jsonPath("$[0].description", is("Need a laptop")));
+    }
+
+    @Test
+    void getRequestById_ShouldReturn404_WhenRequestDoesNotExist() throws Exception {
+        when(itemRequestService.getItemRequestById(anyLong(), anyLong()))
+                .thenThrow(new NotFoundException("Item request not found"));
+
+        mockMvc.perform(get("/requests/999")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAllRequests_ShouldReturn500_WhenInvalidPaginationParameters() throws Exception {
+        mockMvc.perform(get("/requests/all?from=-1&size=-10")
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isInternalServerError());
+    }
+
+
+
+
 }
 
