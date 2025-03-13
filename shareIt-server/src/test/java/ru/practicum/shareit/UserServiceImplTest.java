@@ -95,6 +95,7 @@ class UserServiceImplTest {
 
         assertThat(exception.getMessage(), is("Пользователь не найден"));
     }
+
     @Test
     void getAllUsers_ShouldReturnEmptyList_WhenNoUsers() {
         when(userRepository.findAll()).thenReturn(List.of());
