@@ -9,6 +9,7 @@ import ru.practicum.shareit.comment.dto.CommentDto;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JsonTest
 class CommentDtoJsonTest {
@@ -29,7 +30,6 @@ class CommentDtoJsonTest {
                 "}";
 
         assertThat(json.write(commentDto)).isEqualToJson(jsonContent);
-
     }
 
     @Test
@@ -45,5 +45,46 @@ class CommentDtoJsonTest {
                 LocalDateTime.of(2025, 3, 1, 12, 0));
 
         assertThat(json.parse(jsonContent)).usingRecursiveComparison().isEqualTo(expectedDto);
+    }
+
+    @Test
+    void serializeCommentDto_WithNullValues() throws Exception {
+        CommentDto commentDto = new CommentDto(null, null, null, null);
+
+        String jsonContent = "{\n" +
+                "    \"id\": null,\n" +
+                "    \"text\": null,\n" +
+                "    \"authorName\": null,\n" +
+                "    \"created\": null\n" +
+                "}";
+
+        assertThat(json.write(commentDto)).isEqualToJson(jsonContent);
+    }
+
+    @Test
+    void deserializeCommentDto_WithNullValues() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"id\": null,\n" +
+                "    \"text\": null,\n" +
+                "    \"authorName\": null,\n" +
+                "    \"created\": null\n" +
+                "}";
+
+        CommentDto expectedDto = new CommentDto(null, null, null, null);
+
+        assertThat(json.parse(jsonContent)).usingRecursiveComparison().isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeCommentDto_ShouldThrowException_WhenInvalidDateFormat() {
+        String invalidJsonContent = "{\n" +
+                "    \"id\": 1,\n" +
+                "    \"text\": \"Nice!\",\n" +
+                "    \"authorName\": \"John Doe\",\n" +
+                "    \"created\": \"invalid-date\"\n" +
+                "}";
+
+        assertThatThrownBy(() -> json.parse(invalidJsonContent))
+                .isInstanceOf(Exception.class);
     }
 }

@@ -24,7 +24,7 @@ class UserDtoJsonTest {
                 "    \"email\": \"john@example.com\"\n" +
                 "}";
 
-       assertThat(json.write(userDto)).isEqualToJson(jsonContent);
+        assertThat(json.write(userDto)).isEqualToJson(jsonContent);
     }
 
     @Test
@@ -37,7 +37,56 @@ class UserDtoJsonTest {
 
         UserDto expectedDto = new UserDto(1L, "John Doe", "john@example.com");
 
-        assertThat(json.parse(jsonContent)).isEqualTo(expectedDto);
+        assertThat(json.parse(jsonContent)).usingRecursiveComparison().isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeUserDto_WithMissingId() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"name\": \"John Doe\",\n" +
+                "    \"email\": \"john@example.com\"\n" +
+                "}";
+
+        UserDto expectedDto = new UserDto(null, "John Doe", "john@example.com");
+
+        assertThat(json.parse(jsonContent).getObject()).usingRecursiveComparison().isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeUserDto_WithMissingEmail() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"id\": 1,\n" +
+                "    \"name\": \"John Doe\"\n" +
+                "}";
+
+        UserDto expectedDto = new UserDto(1L, "John Doe", null);
+
+        assertThat(json.parse(jsonContent).getObject()).usingRecursiveComparison().isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeUserDto_WithEmptyFields() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"id\": 1,\n" +
+                "    \"name\": \"\",\n" +
+                "    \"email\": \"\"\n" +
+                "}";
+
+        UserDto expectedDto = new UserDto(1L, "", "");
+
+        assertThat(json.parse(jsonContent).getObject()).usingRecursiveComparison().isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeUserDto_WithNullFields() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"id\": 1,\n" +
+                "    \"name\": null,\n" +
+                "    \"email\": null\n" +
+                "}";
+
+        UserDto expectedDto = new UserDto(1L, null, null);
+
+        assertThat(json.parse(jsonContent).getObject()).usingRecursiveComparison().isEqualTo(expectedDto);
     }
 }
-

@@ -7,7 +7,7 @@ import org.springframework.boot.test.json.JacksonTester;
 import ru.practicum.shareit.item.dto.ItemPatchDto;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JsonTest
 class ItemPatchDtoJsonTest {
@@ -30,7 +30,6 @@ class ItemPatchDtoJsonTest {
         assertThat(json.write(itemPatchDto)).isEqualToJson(jsonContent);
     }
 
-
     @Test
     void deserializeItemPatchDto() throws Exception {
         String jsonContent = "{\n" +
@@ -45,5 +44,54 @@ class ItemPatchDtoJsonTest {
 
         assertThat(json.parse(jsonContent)).isEqualTo(expectedDto);
     }
-}
 
+    @Test
+    void serializeItemPatchDto_WithNullValues() throws Exception {
+        ItemPatchDto itemPatchDto = new ItemPatchDto(null, null, null, null);
+
+        String jsonContent = "{\n" +
+                "    \"name\": null,\n" +
+                "    \"description\": null,\n" +
+                "    \"available\": null,\n" +
+                "    \"requestId\": null\n" +
+                "}";
+
+        assertThat(json.write(itemPatchDto)).isEqualToJson(jsonContent);
+    }
+
+    @Test
+    void deserializeItemPatchDto_WithNullValues() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"name\": null,\n" +
+                "    \"description\": null,\n" +
+                "    \"available\": null,\n" +
+                "    \"requestId\": null\n" +
+                "}";
+
+        ItemPatchDto expectedDto = new ItemPatchDto(null, null, null, null);
+
+        assertThat(json.parse(jsonContent)).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeItemPatchDto_WithPartialFields() throws Exception {
+        String jsonContent = "{\n" +
+                "    \"name\": \"Updated Laptop\"\n" +
+                "}";
+
+        ItemPatchDto expectedDto = new ItemPatchDto("Updated Laptop", null, null, null);
+
+        assertThat(json.parse(jsonContent)).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deserializeItemPatchDto_ShouldThrowException_WhenInvalidJson() {
+        String invalidJsonContent = "{\n" +
+                "    \"name\": \"Updated Laptop\",\n" +
+                "    \"available\": \"wrong-value\"\n" + // Некорректный boolean
+                "}";
+
+        assertThatThrownBy(() -> json.parse(invalidJsonContent))
+                .isInstanceOf(Exception.class);
+    }
+}
