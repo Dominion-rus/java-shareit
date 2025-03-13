@@ -13,6 +13,8 @@ import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.exceptions.AccessDeniedException;
+import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.ValidateException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -20,6 +22,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -84,5 +87,111 @@ class BookingServiceImplTest {
 
         assertThat(exception.getMessage(), containsString("Вещь недоступна для бронирования"));
     }
+
+    @Test
+    void updateBookingStatus_ShouldApproveBooking() {
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(Mockito.<Booking>any())).thenReturn(booking);
+
+        BookingResponseDto result = bookingService.updateBookingStatus(owner.getId(), booking.getId(), true);
+
+        assertThat(result.getStatus(), is(BookingStatus.APPROVED));
+    }
+
+    @Test
+    void updateBookingStatus_ShouldRejectBooking() {
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(Mockito.<Booking>any())).thenReturn(booking);
+
+        BookingResponseDto result = bookingService.updateBookingStatus(owner.getId(), booking.getId(), false);
+
+        assertThat(result.getStatus(), is(BookingStatus.REJECTED));
+    }
+
+    @Test
+    void updateBookingStatus_ShouldThrowException_WhenNotOwner() {
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> bookingService.updateBookingStatus(3L, booking.getId(), true)
+        );
+
+        assertThat(exception.getMessage(), containsString("Подтвердить бронирование может только владелец"));
+    }
+
+    @Test
+    void getBooking_ShouldReturnBooking_WhenOwnerOrBooker() {
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+
+        BookingResponseDto resultAsBooker = bookingService.getBooking(user.getId(), booking.getId());
+        BookingResponseDto resultAsOwner = bookingService.getBooking(owner.getId(), booking.getId());
+
+        assertThat(resultAsBooker, notNullValue());
+        assertThat(resultAsOwner, notNullValue());
+    }
+
+    @Test
+    void getBooking_ShouldThrowException_WhenUnauthorized() {
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> bookingService.getBooking(3L, booking.getId())
+        );
+
+        assertThat(exception.getMessage(), containsString("Доступ запрещён"));
+    }
+
+    @Test
+    void getUserBookings_ShouldReturnListOfBookings() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(bookingRepository.findByBookerIdOrderByStartDesc(user.getId()))
+                .thenReturn(List.of(booking));
+
+        List<BookingResponseDto> result = bookingService.getUserBookings(user.getId(), "ALL");
+
+        assertThat(result, hasSize(1));
+        assertThat(result.get(0).getStatus(), is(BookingStatus.WAITING));
+    }
+
+    @Test
+    void getUserBookings_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getUserBookings(user.getId(), "ALL")
+        );
+
+        assertThat(exception.getMessage(), containsString("Пользователь не найден"));
+    }
+
+    @Test
+    void getOwnerBookings_ShouldThrowException_WhenUserHasNoItems() {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(itemRepository.findByOwnerId(owner.getId())).thenReturn(List.of());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getOwnerBookings(owner.getId(), "ALL")
+        );
+
+        assertThat(exception.getMessage(), containsString("У пользователя нет вещей, доступ запрещен"));
+    }
+
+    @Test
+    void getOwnerBookings_ShouldReturnListOfBookings() {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(itemRepository.findByOwnerId(owner.getId())).thenReturn(List.of(item));
+        when(bookingRepository.findByItemOwnerAndState(List.of(item), "ALL")).thenReturn(List.of(booking));
+
+        List<BookingResponseDto> result = bookingService.getOwnerBookings(owner.getId(), "ALL");
+
+        assertThat(result, hasSize(1));
+        assertThat(result.get(0).getStatus(), is(BookingStatus.WAITING));
+    }
+
+
 }
 

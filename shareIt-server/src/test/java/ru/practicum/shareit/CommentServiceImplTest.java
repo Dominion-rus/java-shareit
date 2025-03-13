@@ -14,6 +14,7 @@ import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.comment.repository.CommentRepository;
 import ru.practicum.shareit.comment.service.CommentServiceImpl;
+import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.ValidateException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -84,6 +85,48 @@ class CommentServiceImplTest {
 
     @Test
     void addComment_WhenUserNotBookedItem_ShouldThrowException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(bookingRepository.findLastCompletedBooking(anyLong(), anyLong(), eq(BookingStatus.APPROVED),
+                Mockito.any(LocalDateTime.class)))
+                .thenReturn(null);
+
+        ValidateException exception = assertThrows(
+                ValidateException.class,
+                () -> commentService.addComment(user.getId(), item.getId(), commentDto)
+        );
+
+        assertThat(exception.getMessage(), containsString("Комментарий может оставить только арендатор"));
+    }
+
+    @Test
+    void addComment_WhenUserNotFound_ShouldThrowException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> commentService.addComment(user.getId(), item.getId(), commentDto)
+        );
+
+        assertThat(exception.getMessage(), containsString("Пользователь не найден"));
+    }
+
+    @Test
+    void addComment_WhenItemNotFound_ShouldThrowException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> commentService.addComment(user.getId(), item.getId(), commentDto)
+        );
+
+        assertThat(exception.getMessage(), containsString("Вещь не найдена"));
+    }
+
+    @Test
+    void addComment_WhenBookingNotApproved_ShouldThrowException() {
+        booking.setStatus(BookingStatus.WAITING);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
         when(bookingRepository.findLastCompletedBooking(anyLong(), anyLong(), eq(BookingStatus.APPROVED),
