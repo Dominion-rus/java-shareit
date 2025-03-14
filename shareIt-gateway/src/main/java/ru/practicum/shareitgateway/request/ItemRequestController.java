@@ -9,7 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareitgateway.request.dto.ItemRequestDto;
 import ru.practicum.shareitgateway.config.AppConfig;
 
 @RestController

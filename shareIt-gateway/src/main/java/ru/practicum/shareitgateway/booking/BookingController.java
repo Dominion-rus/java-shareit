@@ -7,7 +7,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareitgateway.booking.dto.BookingDto;
 import ru.practicum.shareitgateway.config.AppConfig;
 
 @RestController

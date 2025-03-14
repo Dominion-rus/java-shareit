@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.shareitgateway.config.AppConfig;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemPatchDto;
-import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareitgateway.item.dto.ItemDto;
+import ru.practicum.shareitgateway.item.dto.ItemPatchDto;
+import ru.practicum.shareitgateway.item.dto.CommentDto;
 
 import jakarta.validation.Valid;
 

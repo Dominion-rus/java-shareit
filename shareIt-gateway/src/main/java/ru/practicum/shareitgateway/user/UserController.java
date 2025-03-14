@@ -7,8 +7,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.shareitgateway.config.AppConfig;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserPatchDto;
+import ru.practicum.shareitgateway.user.dto.UserDto;
+import ru.practicum.shareitgateway.user.dto.UserPatchDto;
 
 
 @RestController
