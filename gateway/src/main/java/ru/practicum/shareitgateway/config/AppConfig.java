@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 @Getter
 public class AppConfig {
 
-    @Value("${server.shareIt.url}")
+    @Value("${shareit-server.url}")
     private String serverUrl;
 
 

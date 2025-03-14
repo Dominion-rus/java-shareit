@@ -5,8 +5,8 @@ services:
     image: postgres:latest
     container_name: my_postgres
     environment:
-      POSTGRES_USER: sa
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: shareit
+      POSTGRES_PASSWORD: shareit
       POSTGRES_DB: shareit
     ports:
       - "5432:5432"
