@@ -11,8 +11,9 @@ import org.springframework.web.client.RestTemplate;
 import ru.practicum.shareitgateway.config.AppConfig;
 import ru.practicum.shareitgateway.request.ItemRequestController;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ItemRequestController.class)
 @Import(AppConfig.class)
