@@ -53,7 +53,7 @@ public class UserController {
             responseHeaders.setContentType(MediaType.APPLICATION_JSON);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .headers(responseHeaders)
-                    .body("{\"success\":false,\"error\":\"Internal error\",\"message\":\"Произошла ошибка на шлюзе\"}");
+                    .body("{\"success\":false,\"error\":\"Internal error\",\"message\":\"" + e.getMessage() + "\"}");
         }
     }
 
