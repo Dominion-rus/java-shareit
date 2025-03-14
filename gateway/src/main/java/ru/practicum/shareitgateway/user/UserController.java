@@ -57,9 +57,6 @@ public class UserController {
         }
     }
 
-
-
-
     @GetMapping("/{userId}")
     public ResponseEntity<Object> getUser(@PathVariable Long userId) {
         String url = appConfig.getFullUrl("/users/" + userId);
@@ -73,23 +70,6 @@ public class UserController {
         log.info("Отправка запроса на сервер: {}", url);
         return restTemplate.getForEntity(url, Object.class);
     }
-
-//    @PatchMapping("/{userId}")
-//    public ResponseEntity<Object> updateUser(
-//            @PathVariable Long userId,
-//            @Valid @RequestBody UserPatchDto userPatchDto) {
-//
-//        String url = appConfig.getFullUrl("/users/" + userId);
-//        log.info("PATCH-запрос на сервер: {}, тело: {}", url, userPatchDto);
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("X-Sharer-User-Id", String.valueOf(userId));
-//        HttpEntity<UserPatchDto> requestEntity = new HttpEntity<>(userPatchDto, headers);
-//
-//        ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.PATCH, requestEntity, Object.class);
-//        log.info("Ответ сервера: {}", response);
-//        return response;
-//    }
 
     @PatchMapping("/{userId}")
     public ResponseEntity<Object> updateUser(

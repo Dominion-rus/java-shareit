@@ -118,7 +118,7 @@ public class ItemController {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .headers(responseHeaders)
-                    .body(e.getResponseBodyAsString()); // Передаем тело ошибки без изменений
+                    .body(e.getResponseBodyAsString());
         } catch (HttpClientErrorException e) {
             log.warn("Ошибка от сервера: статус={}, сообщение={}", e.getStatusCode(), e.getResponseBodyAsString());
 
