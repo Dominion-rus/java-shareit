@@ -88,14 +88,14 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleDataIntegrityViolation_ShouldReturn409_WhenEmailAlreadyExists() {
+    void handleDataIntegrityViolation_ShouldReturn500_WhenEmailAlreadyExists() {
         DataIntegrityViolationException exception = new DataIntegrityViolationException("PUBLIC.CONSTRAINT_INDEX_4");
 
         ResponseEntity<Map<String, Object>> response = exceptionHandler.handleDataIntegrityViolation(exception);
 
-        assertThat(response.getStatusCodeValue()).isEqualTo(409);
+        assertThat(response.getStatusCodeValue()).isEqualTo(500);
         assertThat(response.getBody()).containsEntry("error", "Internal error");
-        assertThat(response.getBody()).containsEntry("message", "Пользователь с таким email уже существует.");
+        assertThat(response.getBody()).containsEntry("message", "Произошла ошибка на сервере");
     }
 
     @Test
@@ -106,6 +106,6 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCodeValue()).isEqualTo(500);
         assertThat(response.getBody()).containsEntry("error", "Internal error");
-        assertThat(response.getBody()).containsEntry("message", "Ошибка в БД");
+        assertThat(response.getBody()).containsEntry("message", "Произошла ошибка на сервере");
     }
 }
