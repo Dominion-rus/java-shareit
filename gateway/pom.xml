@@ -8,15 +8,17 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>gateway</artifactId>
+    <artifactId>shareit-gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <name>ShareIt Gateway</name>
 
+
+
     <dependencies>
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>server</artifactId>
+            <artifactId>shareit-server</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
