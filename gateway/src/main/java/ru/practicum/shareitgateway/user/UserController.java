@@ -28,32 +28,10 @@ public class UserController {
 
         try {
             return restTemplate.postForEntity(url, userDto, Object.class);
-        } catch (HttpClientErrorException.Conflict e) {
-            log.warn("Ошибка 409: {}", e.getResponseBodyAsString());
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .headers(responseHeaders)
-                    .body(e.getResponseBodyAsString());
-        } catch (HttpClientErrorException.BadRequest e) {
-            log.warn("Ошибка 400: {}", e.getResponseBodyAsString());
-
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .headers(responseHeaders)
-                    .body(e.getResponseBodyAsString());
         } catch (HttpClientErrorException e) {
-            log.warn("Ошибка от сервера: статус={}, сообщение={}", e.getStatusCode(), e.getResponseBodyAsString());
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+            return handleHttpClientErrorException(e);
         } catch (Exception e) {
-            log.error("Неожиданная ошибка при отправке POST-запроса: {}", e.getMessage(), e);
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .headers(responseHeaders)
-                    .body("{\"success\":false,\"error\":\"Internal error\",\"message\":\"" + e.getMessage() + "\"}");
+            return handleUnexpectedException(e, "POST");
         }
     }
 
@@ -85,27 +63,10 @@ public class UserController {
 
         try {
             return restTemplate.exchange(url, HttpMethod.PATCH, requestEntity, Object.class);
-        } catch (HttpClientErrorException.Conflict e) {
-            log.warn("Ошибка 409: {}", e.getResponseBodyAsString());
-
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .headers(responseHeaders)
-                    .body(e.getResponseBodyAsString());
         } catch (HttpClientErrorException e) {
-            log.warn("Ошибка от сервера: статус={}, сообщение={}", e.getStatusCode(), e.getResponseBodyAsString());
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+            return handleHttpClientErrorException(e);
         } catch (Exception e) {
-            log.error("Неожиданная ошибка при отправке PATCH-запроса: {}", e.getMessage(), e);
-
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .headers(responseHeaders)
-                    .body("{\"success\":false,\"error\":\"Internal error\",\"message\":\"Произошла ошибка на шлюзе\"}");
+            return handleUnexpectedException(e, "PATCH");
         }
     }
 
@@ -125,4 +86,27 @@ public class UserController {
         );
     }
 
+    private ResponseEntity<Object> handleHttpClientErrorException(HttpClientErrorException e) {
+        log.warn("Ошибка от сервера: статус={}, сообщение={}", e.getStatusCode(), e.getResponseBodyAsString());
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .headers(responseHeaders)
+                .body(e.getResponseBodyAsString());
+    }
+
+    private ResponseEntity<Object> handleUnexpectedException(Exception e, String method) {
+        log.error("Неожиданная ошибка при {}-запросе: {}", method, e.getMessage(), e);
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .headers(responseHeaders)
+                .body("{\"success\":false,\"error\":\"Internal error\",\"message\":\"Произошла ошибка на шлюзе\"}");
+    }
 }

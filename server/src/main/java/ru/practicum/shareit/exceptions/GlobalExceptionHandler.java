@@ -76,24 +76,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-//    @ExceptionHandler(DataIntegrityViolationException.class)
-//    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-//        if (ex.getMessage().contains("PUBLIC.CONSTRAINT_INDEX_4")) {
-//
-//            Map<String, Object> error = new HashMap<>();
-//            error.put("success",false);
-//            error.put("error", "Internal error");
-//            error.put("message", "Пользователь с таким email уже существует.");
-//
-//            return new ResponseEntity<>(error, HttpStatus.CONFLICT);
-//        }
-//        Map<String, Object> error = new HashMap<>();
-//        error.put("success",false);
-//        error.put("error", "Internal error");
-//        error.put("message", ex.getMessage());
-//        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
-
     @ExceptionHandler({DataIntegrityViolationException.class, TransactionSystemException.class})
     public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(Exception ex) {
         if (ex.getMessage().contains("users_email_key")) {
