@@ -37,8 +37,8 @@ public class ItemRequestController {
     @GetMapping("/all")
     public List<ItemRequestResponseDto> getAllRequests(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "10") Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         return itemRequestService.getAllItemRequests(userId, pageable);
     }
